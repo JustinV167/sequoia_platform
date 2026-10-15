@@ -1,0 +1,33 @@
+services:
+  api:
+    build:
+      context: ./services/sequoia_back
+      dockerfile: Dockerfile
+    container_name: sequoia_api
+    restart: unless-stopped
+    environment:
+      DB_HOST: sequoia_db
+      DB_PORT: "5432"
+      DB_USER: sequoia
+      DB_PASSWORD: sequoia_pass
+      DB_NAME: sequoia
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+    networks:
+      - sequoia_net
+
+  front:
+    build:
+      context: ./services/sequoia_front
+      dockerfile: Dockerfile
+    container_name: sequoia_front
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - sequoia_net
+
+networks:
+  sequoia_net:
+    external: true
