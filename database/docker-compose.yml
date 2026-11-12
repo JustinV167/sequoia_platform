@@ -4,15 +4,33 @@ services:
     container_name: sequoia_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: sequoia
-      POSTGRES_PASSWORD: sequoia_pass
-      POSTGRES_DB: sequoia
+      POSTGRES_USER: "${DB_USER:-sequoia}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-sequoia_pass}"
+      POSTGRES_DB: "${DB_NAME:-sequoia}"
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - sequoia_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sequoia -d sequoia"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sequoia} -d ${DB_NAME:-sequoia}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - sequoia_net
+
+  mongo:
+    image: mongo:7
+    container_name: sequoia_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: "${MONGO_DB:-sequoia}"
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - sequoia_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -25,3 +43,4 @@ networks:
 
 volumes:
   sequoia_pgdata:
+  sequoia_mongo_data:

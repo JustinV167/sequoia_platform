@@ -1,23 +1,43 @@
+import { join } from 'node:path'
+
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { TypeOrmModule } from '@nestjs/typeorm'
+import { ConfigModule } from '@nestjs/config'
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+
+import { AuthModule } from './auth/auth.module'
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter'
+import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { CoursesModule } from './courses/courses.module'
+import { EnrollmentsModule } from './courses/enrollments/enrollments.module'
+import { MongoModule } from './database/mongo.module'
+import { PostgresModule } from './database/postgres.module'
+import { UploadsModule } from './uploads/uploads.module'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST', 'localhost'),
-        port: Number(config.get('DB_PORT', 5432)),
-        username: config.get('DB_USER', 'sequoia'),
-        password: config.get('DB_PASSWORD', 'sequoia_pass'),
-        database: config.get('DB_NAME', 'sequoia'),
-        autoLoadEntities: true,
-        synchronize: true, // TODO: replace with migrations before production.
-      }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        join(process.cwd(), '../../.env'),
+        join(__dirname, '../../../.env'),
+      ],
     }),
+    PostgresModule,
+    MongoModule,
+    AuthModule,
+    CoursesModule,
+    EnrollmentsModule,
+    UploadsModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
   ],
 })
 export class AppModule {}
