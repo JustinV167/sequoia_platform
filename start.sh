@@ -28,9 +28,8 @@ echo "  MongoDB    : 27017"
 echo "  API        : http://localhost:3001/api"
 echo "  Front      : http://localhost:5173"
 echo ""
-echo "Logs (Ctrl+C para salir):"
+echo "Logs de api + front (Ctrl+C para salir):"
 echo ""
 
 docker compose "${COMPOSE_ENV_ARGS[@]}" \
-  -f "$ROOT/database/docker-compose.yml" \
-  -f "$ROOT/docker-compose.yml" logs -f
+  -f "$ROOT/docker-compose.yml" logs -f api front
